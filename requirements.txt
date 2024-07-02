@@ -1,0 +1,7 @@
+Flask
+Flask-PyMongo
+flask-httpauth
+werkzeug
+Flask-Cors
+
+

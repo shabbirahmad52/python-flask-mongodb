@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: python-api
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://admin:password123@mongo:27017/robo?authSource=admin
+    volumes:
+      - ./app.py:/app/app.py  # Mount app.py as a volume
+    networks:
+      - backend
+    command: ["sh", "-c", ". venv/bin/activate && python app.py"]  # Start Flask using mounted volume
+        
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == docker01
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == docker01
+
+networks:
+  backend:
+
+volumes:
+  mongo-data:
+
